@@ -18,6 +18,7 @@ interface IRequest
 	 * Get type of request method
 	 * @return string
 	 */
+
 	public function getMethod();
 
 	/**
@@ -64,4 +65,7 @@ interface IRequest
 	 * @return bool|IResponse
 	 */
 	public function Send($URL, IResponse $Response = NULL);
+	
+	/** @return array|null */
+	public function getRequestArguments();
 }
