@@ -54,11 +54,11 @@ class Request implements IRequest
 
 	public function getRequestArguments()
 	{
-		if (!empty($this->data))
+		if (!empty($this->data) && $this->method===self::method_GET)
 		{
 			if (is_array($this->data))
 			{
-				$values = array_values($this->data);
+				$values = array_slice(array_values($this->data), 1);
 				if (!empty($values))
 				{
 					$values_without_spaces = implode('', $values);
@@ -68,9 +68,6 @@ class Request implements IRequest
 					}
 				}
 			}
-		}
-		if ($this->method===self::method_GET)
-		{
 			$values = $this->getArgumentsFromRequestString();
 			if (!empty($values)) return $values;
 		}
