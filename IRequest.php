@@ -18,6 +18,7 @@ interface IRequest
 	 * Get type of request method
 	 * @return string
 	 */
+
 	public function getMethod();
 
 	/**
