@@ -64,4 +64,7 @@ interface IRequest
 	 * @return bool|IResponse
 	 */
 	public function Send($URL, IResponse $Response = NULL);
+	
+	/** @return array|null */
+	public function getRequestArguments();
 }

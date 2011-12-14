@@ -8,9 +8,10 @@ class Request implements IRequest
 	protected $data;
 	protected $accept;
 
-	const method_GET = 'GET';
-	const method_POST = 'POST';
-	const method_PUT = 'PUT';
+	const method_GET    = 'GET';
+	const method_HEAD   = 'HEAD';
+	const method_POST   = 'POST';
+	const method_PUT    = 'PUT';
 	const method_DELETE = 'DELETE';
 
 	/**
@@ -28,20 +29,59 @@ class Request implements IRequest
 	public function BuildFromInput()
 	{
 		$this->headers = $_SERVER;
-		$this->accept = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
-		$this->method = $_SERVER['REQUEST_METHOD'];
+		$this->accept  = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
+		$this->method  = $_SERVER['REQUEST_METHOD'];
 		switch ($this->method)
 		{
-			case 'HEAD':
-			case 'GET':
+			case self::method_HEAD:
+			case self::method_GET:
 				$this->data = $_GET;
 				break;
-			case 'POST':
+			case self::method_POST:
 				$this->data = $_POST;
 				break;
 			default:
-				parse_str(file_get_contents('php://input'), $this->data);
+				if (!empty($_POST))
+				{
+					$this->data = $_POST;
+				}
+				else
+				{
+					parse_str(file_get_contents('php://input'), $this->data);
+				}
 		}
+	}
+
+	public function getRequestArguments()
+	{
+		if (!empty($this->data) && $this->method===self::method_GET)
+		{
+			if (is_array($this->data))
+			{
+				$values = array_slice(array_values($this->data), 1);
+				if (!empty($values))
+				{
+					$values_without_spaces = implode('', $values);
+					if (!empty($values_without_spaces))
+					{
+						return $values;
+					}
+				}
+			}
+			$values = $this->getArgumentsFromRequestString();
+			if (!empty($values)) return $values;
+		}
+		return $this->data;
+	}
+
+	protected function getArgumentsFromRequestString()
+	{
+		if (strpos($_SERVER['QUERY_STRING'], '/')!==false)
+		{
+			$parts = explode('/', $_SERVER['QUERY_STRING']);
+			return array_slice($parts, 1);
+		}
+		return NULL;
 	}
 
 	/**
@@ -136,7 +176,7 @@ class Request implements IRequest
 	public function Send($URL, IResponse $Response = NULL)
 	{
 		$url_data = parse_url($URL);
-		$fp = fsockopen($url_data['host'], 80);
+		$fp       = fsockopen($url_data['host'], 80);
 		if (!$fp) return false;
 		$path = (isset($url_data['path']) ? $url_data['path'] : '/').
 				(isset($url_data['query']) ? '?'.$url_data['query'] : '');
@@ -177,7 +217,7 @@ class Request implements IRequest
 	{
 		//read headers
 		$status_header = '';
-		$headers = array();
+		$headers       = array();
 		while (!feof($fresource))
 		{
 			$header = trim(fgets($fresource));
@@ -186,7 +226,7 @@ class Request implements IRequest
 				if (empty($status_header)) $status_header = $header;
 				if (strpos($header, ':')!==false)
 				{
-					$header = explode(':', $header);
+					$header                    = explode(':', $header);
 					$headers[trim($header[0])] = trim($header[1]);
 				}
 				else $headers[] = $header;
