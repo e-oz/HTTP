@@ -17,6 +17,7 @@ class Response implements IResponse
 		$this->body        = $body;
 		$this->status_code = $status_code;
 		$this->setDefaultUnserializers();
+		$this->setDefaultSerializer();
 	}
 
 	public function getStatusCode()
@@ -43,6 +44,14 @@ class Response implements IResponse
 		if (class_exists(__NAMESPACE__.'\\SerializerXML'))
 		{
 			$this->addUnserializer(new SerializerXML());
+		}
+	}
+
+	protected function setDefaultSerializer()
+	{
+		if (class_exists(__NAMESPACE__.'\\SerializerJSON'))
+		{
+			$this->setSerializer(new SerializerJSON());
 		}
 	}
 
