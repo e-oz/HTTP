@@ -43,4 +43,16 @@ interface IResponse
 	 * Send headers and body to output
 	 */
 	public function Send();
+	
+	public function addUnserializer(ISerializer $Unserializer);
+	
+	public function getSerializationHeader();
+	
+	public function setSerializationHeader($serialization_header = 'Serialized');
+	
+	public function getSerializer();
+	
+	public function setSerializer(ISerializer $Serializer);
+	
+	public function getUnserializers();
 }
