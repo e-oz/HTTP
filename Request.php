@@ -8,21 +8,9 @@ class Request implements IRequest
 	protected $data;
 	protected $accept;
 
-	const method_GET    = 'GET';
-	const method_HEAD   = 'HEAD';
-	const method_POST   = 'POST';
-	const method_PUT    = 'PUT';
-	const method_DELETE = 'DELETE';
-
-	/**
-	 * @param bool $parse - parse current input to object's variables (input request)
-	 * @return \Jamm\HTTP\Request
-	 *
-	 */
-	public function __construct($parse = false)
+	public function __construct()
 	{
 		$this->method = self::method_GET;
-		if ($parse) $this->BuildFromInput();
 		$this->setHeader('Content-type', 'text/plain');
 	}
 
@@ -52,38 +40,6 @@ class Request implements IRequest
 		}
 	}
 
-	public function getRequestArguments()
-	{
-		if (!empty($this->data) && $this->method===self::method_GET)
-		{
-			if (is_array($this->data))
-			{
-				$values = array_slice(array_values($this->data), 1);
-				if (!empty($values))
-				{
-					$values_without_spaces = implode('', $values);
-					if (!empty($values_without_spaces))
-					{
-						return $values;
-					}
-				}
-			}
-			$values = $this->getArgumentsFromRequestString();
-			if (!empty($values)) return $values;
-		}
-		return $this->data;
-	}
-
-	protected function getArgumentsFromRequestString()
-	{
-		if (strpos($_SERVER['QUERY_STRING'], '/')!==false)
-		{
-			$parts = explode('/', $_SERVER['QUERY_STRING']);
-			return array_slice($parts, 1);
-		}
-		return NULL;
-	}
-
 	/**
 	 * Return header from array by key, or all keys
 	 * @param string $key
@@ -110,7 +66,7 @@ class Request implements IRequest
 	/**
 	 * Return key or all the keys of request
 	 * @param string $key
-	 * @return null|array|string|numeric
+	 * @return mixed
 	 */
 	public function getData($key = null)
 	{

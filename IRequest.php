@@ -3,6 +3,12 @@ namespace Jamm\HTTP;
 
 interface IRequest
 {
+	const method_GET    = 'GET';
+	const method_HEAD   = 'HEAD';
+	const method_POST   = 'POST';
+	const method_PUT    = 'PUT';
+	const method_DELETE = 'DELETE';
+	
 	public function BuildFromInput();
 
 	/**
@@ -31,7 +37,7 @@ interface IRequest
 	/**
 	 * Return key or all the keys of request
 	 * @param string $key
-	 * @return null|array|string|numeric
+	 * @return mixed
 	 */
 	public function getData($key = null);
 
@@ -65,7 +71,4 @@ interface IRequest
 	 * @return bool|IResponse
 	 */
 	public function Send($URL, IResponse $Response = NULL);
-	
-	/** @return array|null */
-	public function getRequestArguments();
 }
