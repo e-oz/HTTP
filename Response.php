@@ -165,7 +165,7 @@ class Response implements IResponse
 		return $this->serialization_header;
 	}
 
-	public function setSerializationHeader($serialization_header = 'Serialized')
+	public function setSerializationHeader($serialization_header = 'Serialize')
 	{
 		$this->serialization_header = $serialization_header;
 	}

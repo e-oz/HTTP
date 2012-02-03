@@ -48,7 +48,7 @@ interface IResponse
 	
 	public function getSerializationHeader();
 	
-	public function setSerializationHeader($serialization_header = 'Serialized');
+	public function setSerializationHeader($serialization_header = 'Serialize');
 	
 	public function getSerializer();
 	
