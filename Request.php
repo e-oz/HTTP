@@ -166,10 +166,10 @@ class Request implements IRequest
 
 	/**
 	 * @param \resource $fresource
-	 * @param IResponse $response
+	 * @param IResponse $Response
 	 * @return IResponse
 	 */
-	protected function ReadResponse($fresource, IResponse $response)
+	protected function ReadResponse($fresource, IResponse $Response)
 	{
 		//read headers
 		$status_header = '';
@@ -189,11 +189,11 @@ class Request implements IRequest
 			}
 			else break;
 		}
-		$response->setHeaders($headers);
+		$Response->setHeaders($headers);
 		if (!empty($status_header))
 		{
 			$status_header = explode(' ', $status_header);
-			$response->setStatusCode(intval(trim($status_header[1])));
+			$Response->setStatusCode(intval(trim($status_header[1])));
 		}
 
 		//read body
@@ -201,9 +201,9 @@ class Request implements IRequest
 		while (!feof($fresource)) $body .= fread($fresource, 4096);
 		fclose($fresource);
 
-		if (!empty($body)) $response->setBody($body);
+		if (!empty($body)) $Response->setBody($body);
 
-		return $response;
+		return $Response;
 	}
 
 	/**
