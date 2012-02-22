@@ -5,13 +5,13 @@ interface IResponse
 {
 	public function getStatusCode();
 
-	/** @param int $status_code	 */
+	/** @param int $status_code     */
 	public function setStatusCode($status_code);
 
 	/**
 	 * Set header for the response
 	 * @param string $header
-	 * @param string|numeric $value
+	 * @param string|number $value
 	 */
 	public function setHeader($header, $value);
 
@@ -34,25 +34,23 @@ interface IResponse
 	public function setHeaders(array $headers);
 
 	/**
-	 * Get Result of response - unpack value of body and headers
-	 * @return bool|mixed
-	 */
-	public function getResult();
-	
-	/**
 	 * Send headers and body to output
 	 */
 	public function Send();
-	
-	public function addUnserializer(ISerializer $Unserializer);
-	
+
 	public function getSerializationHeader();
-	
-	public function setSerializationHeader($serialization_header = 'Serialize');
-	
+
+	public function setSerializationHeader($serialization_header = 'ACCEPT');
+
+	/**
+	 * @param ISerializer|NULL $Serializer
+	 */
+	public function setSerializer($Serializer);
+
+	/**
+	 * @return ISerializer|NULL
+	 */
 	public function getSerializer();
-	
-	public function setSerializer(ISerializer $Serializer);
-	
-	public function getUnserializers();
+
+	public function isStatusError();
 }

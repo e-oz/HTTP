@@ -3,10 +3,10 @@ namespace Jamm\HTTP;
 
 class Request implements IRequest
 {
-	protected $method;
-	protected $headers;
-	protected $data;
-	protected $accept;
+	private $method;
+	private $headers;
+	private $data;
+	private $accept;
 
 	public function __construct()
 	{
@@ -121,6 +121,7 @@ class Request implements IRequest
 	public function SetAccept($accept)
 	{
 		$this->accept = $accept;
+		$this->setHeader('ACCEPT', $accept);
 	}
 
 	/**
@@ -131,6 +132,16 @@ class Request implements IRequest
 	 */
 	public function Send($URL, IResponse $Response = NULL)
 	{
+		if (!empty($Response))
+		{
+			$Serializer = $Response->getSerializer();
+			if (!empty($Serializer))
+			{
+				/** @var ISerializer $Serializer  */
+				$serialization_header = $Response->getSerializationHeader();
+				$this->setHeader($serialization_header, $Serializer->getMethodName());
+			}
+		}
 		$url_data = parse_url($URL);
 		$fp       = fsockopen($url_data['host'], 80);
 		if (!$fp) return false;
@@ -160,7 +171,10 @@ class Request implements IRequest
 		{
 			fwrite($fp, $data);
 		}
-		if (!empty($Response)) return $this->ReadResponse($fp, $Response);
+		if (!empty($Response))
+		{
+			return $this->ReadResponse($fp, $Response);
+		}
 		else return true;
 	}
 
@@ -201,7 +215,15 @@ class Request implements IRequest
 		while (!feof($fresource)) $body .= fread($fresource, 4096);
 		fclose($fresource);
 
-		if (!empty($body)) $Response->setBody($body);
+		if (!empty($body))
+		{
+			$Serializer = $Response->getSerializer();
+			if (!empty($Serializer))
+			{
+				$body = $Serializer->unserialize($body);
+			}
+			$Response->setBody($body);
+		}
 
 		return $Response;
 	}

@@ -8,7 +8,10 @@ interface IRequest
 	const method_POST   = 'POST';
 	const method_PUT    = 'PUT';
 	const method_DELETE = 'DELETE';
-	
+
+	/**
+	 * Parse input data (GET, POST) into Request object
+	 */
 	public function BuildFromInput();
 
 	/**
@@ -19,11 +22,6 @@ interface IRequest
 	public function getHeaders($key = null);
 
 	public function setHeader($header, $value);
-
-	/**
-	 * Get type of request method
-	 * @return string
-	 */
 
 	public function getMethod();
 

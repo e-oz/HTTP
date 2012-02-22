@@ -8,16 +8,12 @@ class Response implements IResponse
 	protected $headers;
 	/** @var ISerializer */
 	protected $Serializer;
-	/** @var ISerializer[] */
-	protected $unserializers;
-	protected $serialization_header = 'Serialize';
+	protected $serialization_header = 'ACCEPT';
 
 	public function __construct($body = '', $status_code = 200)
 	{
 		$this->body        = $body;
 		$this->status_code = $status_code;
-		$this->setDefaultUnserializers();
-		$this->setDefaultSerializer();
 	}
 
 	public function getStatusCode()
@@ -25,50 +21,21 @@ class Response implements IResponse
 		return $this->status_code;
 	}
 
-	/** @param int $status_code	 */
+	/** @param int $status_code     */
 	public function setStatusCode($status_code)
 	{
 		$this->status_code = (int)$status_code;
 	}
 
-	protected function setDefaultUnserializers()
-	{
-		if (class_exists(__NAMESPACE__.'\\SerializerJSON'))
-		{
-			$this->addUnserializer(new SerializerJSON());
-		}
-		if (class_exists(__NAMESPACE__.'\\SerializerPHP'))
-		{
-			$this->addUnserializer(new SerializerPHP());
-		}
-		if (class_exists(__NAMESPACE__.'\\SerializerXML'))
-		{
-			$this->addUnserializer(new SerializerXML());
-		}
-	}
-
-	protected function setDefaultSerializer()
-	{
-		if (class_exists(__NAMESPACE__.'\\SerializerJSON'))
-		{
-			$this->setSerializer(new SerializerJSON());
-		}
-	}
-
-	public function addUnserializer(ISerializer $Unserializer)
-	{
-		$this->unserializers[$Unserializer->getMethodName()] = $Unserializer;
-	}
-
 	/**
 	 * Set header for the response
 	 * @param string $header
-	 * @param string|numeric $value
+	 * @param string|number $value
 	 */
 	public function setHeader($header, $value)
 	{
 		$this->headers[$header] = $value;
-		if ($header==='Location' && ($this->status_code==200 || empty($this->status_code))) $this->setStatusCode(301);
+		if (strtolower($header)==='location' && ($this->status_code < 300 || $this->status_code > 399)) $this->setStatusCode(301);
 	}
 
 	public function getHeader($header)
@@ -86,52 +53,12 @@ class Response implements IResponse
 	}
 
 	/**
-	 * Get Result of response - unpack value of body and headers
-	 * @return bool|mixed
-	 */
-	public function getResult()
-	{
-		if ($this->getStatusCode() >= 400) return false;
-
-		$serialization_method = $this->getHeader($this->serialization_header);
-		if (!empty($serialization_method))
-		{
-			if (isset($this->unserializers[$serialization_method]))
-			{
-				return $this->unserializers[$serialization_method]->unserialize($this->body);
-			}
-			else
-			{
-				trigger_error('Unserializer not found for method '.$serialization_method, E_USER_WARNING);
-				return $this->body;
-			}
-		}
-		return $this->body;
-	}
-
-	/**
 	 * Set body of the response
 	 * @param $body
 	 */
 	public function setBody($body)
 	{
-		if (!is_scalar($body))
-		{
-			if (!empty($this->Serializer))
-			{
-				$this->body = $this->Serializer->serialize($body);
-				$this->setHeader($this->serialization_header, $this->Serializer->getMethodName());
-			}
-			else
-			{
-				trigger_error('Not scalar value should be serialized, but serializer does not exists', E_USER_WARNING);
-				$this->body = serialize($body);
-			}
-		}
-		else
-		{
-			$this->body = $body;
-		}
+		$this->body = $body;
 	}
 
 	public function getHeaders()
@@ -149,6 +76,16 @@ class Response implements IResponse
 	 */
 	public function Send()
 	{
+		if (!empty($this->Serializer))
+		{
+			$body = $this->Serializer->serialize($this->body);
+			$this->setHeader($this->serialization_header, $this->Serializer->getMethodName());
+		}
+		else
+		{
+			$body = $this->body;
+		}
+
 		$headers = $this->getHeaders();
 		if (!empty($headers))
 		{
@@ -157,7 +94,7 @@ class Response implements IResponse
 				header($header_key.': '.$header_value, true, $this->status_code);
 			}
 		}
-		print $this->body;
+		print $body;
 	}
 
 	public function getSerializationHeader()
@@ -165,23 +102,27 @@ class Response implements IResponse
 		return $this->serialization_header;
 	}
 
-	public function setSerializationHeader($serialization_header = 'Serialize')
+	public function setSerializationHeader($serialization_header = 'ACCEPT')
 	{
 		$this->serialization_header = $serialization_header;
 	}
 
-	public function getSerializer()
-	{
-		return $this->Serializer;
-	}
-
-	public function setSerializer(ISerializer $Serializer)
+	public function setSerializer($Serializer)
 	{
 		$this->Serializer = $Serializer;
 	}
 
-	public function getUnserializers()
+	public function isStatusError()
 	{
-		return $this->unserializers;
+		//http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+		return ($this->status_code > 399);
+	}
+
+	/**
+	 * @return \Jamm\HTTP\ISerializer|NULL
+	 */
+	public function getSerializer()
+	{
+		return $this->Serializer;
 	}
 }
