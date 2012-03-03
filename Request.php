@@ -138,8 +138,7 @@ class Request implements IRequest
 			if (!empty($Serializer))
 			{
 				/** @var ISerializer $Serializer  */
-				$serialization_header = $Response->getSerializationHeader();
-				$this->setHeader($serialization_header, $Serializer->getMethodName());
+				$this->SetAccept($Serializer->getMethodName());
 			}
 		}
 		$url_data = parse_url($URL);

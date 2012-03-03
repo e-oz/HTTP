@@ -8,7 +8,6 @@ class Response implements IResponse
 	protected $headers;
 	/** @var ISerializer */
 	protected $Serializer;
-	protected $serialization_header = 'ACCEPT';
 
 	public function __construct($body = '', $status_code = 200)
 	{
@@ -79,7 +78,6 @@ class Response implements IResponse
 		if (!empty($this->Serializer))
 		{
 			$body = $this->Serializer->serialize($this->body);
-			$this->setHeader($this->serialization_header, $this->Serializer->getMethodName());
 		}
 		else
 		{
@@ -101,16 +99,6 @@ class Response implements IResponse
 			}
 		}
 		print $body;
-	}
-
-	public function getSerializationHeader()
-	{
-		return $this->serialization_header;
-	}
-
-	public function setSerializationHeader($serialization_header = 'ACCEPT')
-	{
-		$this->serialization_header = $serialization_header;
 	}
 
 	public function setSerializer($Serializer)

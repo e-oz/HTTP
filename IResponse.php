@@ -38,10 +38,6 @@ interface IResponse
 	 */
 	public function Send();
 
-	public function getSerializationHeader();
-
-	public function setSerializationHeader($serialization_header = 'ACCEPT');
-
 	/**
 	 * @param ISerializer|NULL $Serializer
 	 */
