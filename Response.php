@@ -89,13 +89,14 @@ class Response implements IResponse
 				$this->status_code = 415;
 			}
 		}
-
+		$protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
+		header($protocol.' '.$this->getStatusCode());
 		$headers = $this->getHeaders();
 		if (!empty($headers))
 		{
 			foreach ($headers as $header_key => $header_value)
 			{
-				header($header_key.': '.$header_value, true, $this->status_code);
+				header($header_key.': '.$header_value);
 			}
 		}
 		print $body;
