@@ -142,8 +142,33 @@ class Request implements IRequest
 			}
 		}
 		$url_data = parse_url($URL);
-		$fp       = fsockopen($url_data['host'], 80);
-		if (!$fp) return false;
+		if (empty($url_data['port']))
+		{
+			switch ($url_data['scheme'])
+			{
+				case 'https':
+				case 'ssl':
+					$url_data['port'] = 443;
+					break;
+				case 'http':
+				default:
+					$url_data['port'] = 80;
+			}
+		}
+		if ($url_data['scheme']=='https' && stripos($url_data['host'], 'ssl://')===false)
+		{
+			$socket_host = 'ssl://'.$url_data['host'];
+		}
+		else
+		{
+			$socket_host = $url_data['host'];
+		}
+		$fp = fsockopen($socket_host, $url_data['port'], $errno, $errstr);
+		if (!$fp)
+		{
+			trigger_error('Can not connect to '.$url_data['host'].':'.$url_data['port'].PHP_EOL.$errstr, E_USER_WARNING);
+			return false;
+		}
 		$path = (isset($url_data['path']) ? $url_data['path'] : '/').
 				(isset($url_data['query']) ? '?'.$url_data['query'] : '');
 		$data = $this->getData();
