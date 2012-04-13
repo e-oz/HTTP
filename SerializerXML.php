@@ -45,7 +45,7 @@ class SerializerXML implements ISerializer
 				}
 				else
 				{
-					$subnode = $XML->addChild($this->array_item_name, $value);
+					$subnode = $XML->addChild($this->array_item_name, str_replace('&', '&amp;', $value));
 					if ($key!=$consecutive_counter)
 					{
 						$subnode->addAttribute($this->array_item_attribute, $key);
@@ -116,7 +116,7 @@ class SerializerXML implements ISerializer
 					unset($xmlarr[$key]);
 					$index          = $this->getNextFreeIndexOfArray($xmlarr);
 					$xmlarr[$index] = $value;
-					array_multisort($xmlarr);					
+					array_multisort($xmlarr);
 				}
 			}
 		}
