@@ -7,6 +7,8 @@ class Request implements IRequest
 	private $headers;
 	private $data;
 	private $accept;
+	private $protocol_version = '1.0';
+	private $connection;
 
 	public function __construct()
 	{
@@ -49,7 +51,15 @@ class Request implements IRequest
 	{
 		if (!empty($key))
 		{
-			return isset($this->headers[$key]) ? $this->headers[$key] : NULL;
+			$low_key = strtolower($key);
+			foreach ($this->headers as $header => $value)
+			{
+				if ($low_key===strtolower($header))
+				{
+					return $value;
+				}
+			}
+			return NULL;
 		}
 		else return $this->headers;
 	}
@@ -99,7 +109,22 @@ class Request implements IRequest
 
 	public function setHeader($header, $value)
 	{
-		$this->headers[$header] = $value;
+		if (empty($header)) return false;
+		if ($value===NULL || $value==='')
+		{
+			$low_key = strtolower($header);
+			foreach ($this->headers as $key=> $value)
+			{
+				if ($low_key===strtolower($key))
+				{
+					unset($this->headers[$key]);
+				}
+			}
+		}
+		else
+		{
+			$this->headers[$header] = $value;
+		}
 	}
 
 	/**
@@ -163,58 +188,93 @@ class Request implements IRequest
 		{
 			$socket_host = $url_data['host'];
 		}
-		$fp = fsockopen($socket_host, $url_data['port'], $errno, $errstr);
-		if (!$fp)
+		if (!$this->createConnection($socket_host, $url_data['port'], $errno, $errstr))
 		{
-			trigger_error('Can not connect to '.$url_data['host'].':'.$url_data['port'].PHP_EOL.$errstr, E_USER_WARNING);
+			trigger_error('Can not connect to '.$socket_host.' port '.$url_data['port'].PHP_EOL.$errstr, E_USER_WARNING);
 			return false;
 		}
-		$path = (isset($url_data['path']) ? $url_data['path'] : '/').
-				(isset($url_data['query']) ? '?'.$url_data['query'] : '');
-		$data = $this->getData();
-		if (!empty($data) && is_array($data)) $data = http_build_query($data);
+		$is_get_query = ($this->method===self::method_GET || $this->method===self::method_HEAD);
+		$data         = $this->getData();
+		if (!empty($data))
+		{
+			if (is_array($data))
+			{
+				$data = http_build_query($data);
+			}
+			if ($is_get_query)
+			{
+				if (!empty($url_data['query']))
+				{
+					$url_data['query'] .= '&'.$data;
+				}
+				else
+				{
+					$url_data['query'] = $data;
+				}
+			}
+		}
+		$path = (isset($url_data['path']) ? $url_data['path'] : '/')
+				.(isset($url_data['query']) ? '?'.$url_data['query'] : '')
+				.(isset($url_data['fragment']) ? '#'.$url_data['fragment'] : '');
 
-		if ($this->method==self::method_GET)
+		$this->setHeader('Host', NULL);
+		if (!$this->getHeaders('Connection'))
 		{
-			fwrite($fp, $this->method." $path?$data HTTP/1.0\r\n");
+			$this->setHeader('Connection', 'Close');
 		}
-		else
+		$this->writeToConnection($this->method.' '.$path.' HTTP/'.$this->protocol_version."\r\n");
+		$this->writeToConnection("Host: {$url_data['host']}\r\n");
+		if (!$is_get_query)
 		{
-			fwrite($fp, $this->method." $path HTTP/1.0\r\n");
-			fwrite($fp, "Content-Length: ".strlen($data)."\r\n");
+			$this->setHeader('Content-Length', strlen($data));
 		}
-		fwrite($fp, "Host: {$url_data['host']}\r\n");
 		foreach ($this->getHeaders() as $header_name => $header_value)
 		{
-			fwrite($fp, "$header_name: $header_value\r\n");
+			$this->writeToConnection("$header_name: $header_value\r\n");
 		}
+		$this->writeToConnection("\r\n");
 
-		fwrite($fp, "Connection: Close\r\n\r\n");
-
-		if ($this->method!=self::method_GET)
+		if (!$is_get_query && !empty($data))
 		{
-			fwrite($fp, $data);
+			$this->writeToConnection($data);
 		}
+
 		if (!empty($Response))
 		{
-			return $this->ReadResponse($fp, $Response);
+			return $this->ReadResponse($Response);
 		}
 		else return true;
 	}
 
+	protected function createConnection($host, $port, &$errno, &$errstr)
+	{
+		$this->connection = fsockopen($host, $port, $errno, $errstr);
+		if (!$this->connection) return false;
+		return true;
+	}
+
+	protected function writeToConnection($data)
+	{
+		if (!fwrite($this->connection, $data))
+		{
+			trigger_error('Can not write to connection!', E_USER_WARNING);
+			return false;
+		}
+		return true;
+	}
+
 	/**
-	 * @param \resource $fresource
 	 * @param IResponse $Response
 	 * @return IResponse
 	 */
-	protected function ReadResponse($fresource, IResponse $Response)
+	protected function ReadResponse(IResponse $Response)
 	{
 		//read headers
 		$status_header = '';
 		$headers       = array();
-		while (!feof($fresource))
+		while (!$this->feof($this->connection))
 		{
-			$header = trim(fgets($fresource));
+			$header = trim($this->fgets($this->connection));
 			if (!empty($header))
 			{
 				if (empty($status_header)) $status_header = $header;
@@ -236,8 +296,9 @@ class Request implements IRequest
 
 		//read body
 		$body = '';
-		while (!feof($fresource)) $body .= fread($fresource, 4096);
-		fclose($fresource);
+		while (!$this->feof($this->connection)) $body .= $this->fread($this->connection, 4096);
+		$this->fclose($this->connection);
+		$this->connection = NULL;
 
 		if (!empty($body))
 		{
@@ -252,6 +313,26 @@ class Request implements IRequest
 		return $Response;
 	}
 
+	protected function fgets($handler)
+	{
+		return fgets($handler);
+	}
+
+	protected function feof($handler)
+	{
+		return feof($handler);
+	}
+
+	protected function fread($handler, $length)
+	{
+		return fread($handler, $length);
+	}
+
+	protected function fclose($handler)
+	{
+		return fclose($handler);
+	}
+
 	/**
 	 * Set array of data
 	 * @param array $values
@@ -259,5 +340,10 @@ class Request implements IRequest
 	public function setData(array $values)
 	{
 		$this->data = $values;
+	}
+
+	public function setProtocolVersion($protocol_version = '1.0')
+	{
+		$this->protocol_version = $protocol_version;
 	}
 }
