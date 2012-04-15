@@ -22,13 +22,14 @@ interface IRequest
 	public function getHeaders($key = null);
 
 	public function setHeader($header, $value);
+	
+	public function removeHeader($header);
 
 	public function getMethod();
 
 	/**
 	 * Set the request method
-	 * @param $method
-	 * @return void
+	 * @param string $method
 	 */
 	public function setMethod($method);
 

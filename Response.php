@@ -33,12 +33,20 @@ class Response implements IResponse
 	 */
 	public function setHeader($header, $value)
 	{
+		if (empty($header)) return false;
+		$header                 = $this->getNewOrExistingKeyInArray($header, $this->headers);
 		$this->headers[$header] = $value;
-		if (strtolower($header)==='location' && ($this->status_code < 300 || $this->status_code > 399)) $this->setStatusCode(301);
+		if (strtolower($header)==='location'
+				&& ($this->status_code < 300 || $this->status_code > 399)
+		)
+		{
+			$this->setStatusCode(301);
+		}
 	}
 
 	public function getHeader($header)
 	{
+		$header = $this->getNewOrExistingKeyInArray($header, $this->headers);
 		return isset($this->headers[$header]) ? $this->headers[$header] : NULL;
 	}
 
@@ -119,5 +127,20 @@ class Response implements IResponse
 	public function getSerializer()
 	{
 		return $this->Serializer;
+	}
+
+	private function getNewOrExistingKeyInArray($key, $array)
+	{
+		if (empty($array)) return $key;
+		$keys    = array_keys($array);
+		$low_key = strtolower($key);
+		foreach ($keys as $existing_key)
+		{
+			if ($low_key===strtolower($existing_key))
+			{
+				return $existing_key;
+			}
+		}
+		return $key;
 	}
 }

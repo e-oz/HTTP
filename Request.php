@@ -51,15 +51,8 @@ class Request implements IRequest
 	{
 		if (!empty($key))
 		{
-			$low_key = strtolower($key);
-			foreach ($this->headers as $header => $value)
-			{
-				if ($low_key===strtolower($header))
-				{
-					return $value;
-				}
-			}
-			return NULL;
+			$key = $this->getNewOrExistingKeyInArray($key, $this->headers);
+			return isset($this->headers[$key]) ? $this->headers[$key] : NULL;
 		}
 		else return $this->headers;
 	}
@@ -112,25 +105,39 @@ class Request implements IRequest
 		if (empty($header)) return false;
 		if ($value===NULL || $value==='')
 		{
-			$low_key = strtolower($header);
-			foreach ($this->headers as $key=> $value)
-			{
-				if ($low_key===strtolower($key))
-				{
-					unset($this->headers[$key]);
-				}
-			}
+			$this->removeHeader($header);
 		}
 		else
 		{
+			$header                 = $this->getNewOrExistingKeyInArray($header, $this->headers);
 			$this->headers[$header] = $value;
 		}
 	}
 
+	public function removeHeader($header)
+	{
+		$key = $this->getNewOrExistingKeyInArray($header, $this->headers);
+		unset($this->headers[$key]);
+	}
+
+	private function getNewOrExistingKeyInArray($key, $array)
+	{
+		if (empty($array)) return $key;
+		$keys    = array_keys($array);
+		$low_key = strtolower($key);
+		foreach ($keys as $existing_key)
+		{
+			if ($low_key===strtolower($existing_key))
+			{
+				return $existing_key;
+			}
+		}
+		return $key;
+	}
+
 	/**
 	 * Set the request method
-	 * @param $method
-	 * @return void
+	 * @param string $method
 	 */
 	public function setMethod($method)
 	{
