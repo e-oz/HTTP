@@ -16,7 +16,7 @@ Example of sending request:
 ##Features
 **Headers in Request and Response are case-insensitive:**
 
-	$Request->setHeader('Authorization', 'auth_token');  
+	$Request->setHeader('Authorization', 'token');  
 	$Request->setHeader('authorization', 'auth_token');  
 	
 	// second line will not create new header and will update existing one    
