@@ -14,8 +14,7 @@ Example of sending request:
 	print $Response->getBody();
 
 ##Features
-* Headers in Request and Response are case-insensitive:
-
+**Headers in Request and Response are case-insensitive:**
 
 	$Request->setHeader('Authorization', 'auth_token');  
 	$Request->setHeader('authorization', 'auth_token');  
@@ -24,16 +23,15 @@ Example of sending request:
 	// $Request->getHeaders('AUTHORIZATION') will return:    
 	// auth_token  
 
-* Body of response can be automatically unpacked from JSON or XML
+**Body of response can be automatically unpacked from JSON or XML**
 
-  
 	// next line will create header Accept: JSON in request,
 	// and body of response will be automatically decoded from JSON
 	
 	$Response->setSerializer(new SerializerJSON());
   
-* SSL support  
-* Easy to test and extend
+**SSL support**  
+**Easy to test and extend**  
 
-
-License: [MIT](http://en.wikipedia.org/wiki/MIT_License)
+##License
+[MIT](http://en.wikipedia.org/wiki/MIT_License)
