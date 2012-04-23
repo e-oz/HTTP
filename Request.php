@@ -206,7 +206,17 @@ class Request implements IRequest
 		{
 			if (is_array($data))
 			{
-				$data = http_build_query($data);
+				if (strpos(PHP_VERSION, '5.4')!==false)
+				{
+					$data = http_build_query($data, null, null, PHP_QUERY_RFC3986);
+				}
+				else
+				{
+					$data = str_replace(
+						array('+', '%7E'),
+						array('%20', '~'),
+						http_build_query($data));
+				}
 			}
 			if ($is_get_query)
 			{
