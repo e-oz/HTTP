@@ -49,4 +49,10 @@ interface IResponse
 	public function getSerializer();
 
 	public function isStatusError();
+
+	public function setStatusReason($status_reason);
+
+	public function getStatusReason();
+	
+	public function __toString();
 }

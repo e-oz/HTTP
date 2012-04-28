@@ -3,11 +3,14 @@ namespace Jamm\HTTP;
 
 interface IRequest
 {
-	const method_GET    = 'GET';
-	const method_HEAD   = 'HEAD';
-	const method_POST   = 'POST';
-	const method_PUT    = 'PUT';
-	const method_DELETE = 'DELETE';
+	const method_GET        = 'GET';
+	const method_POST       = 'POST';
+	const method_PUT        = 'PUT';
+	const method_DELETE     = 'DELETE';
+	const method_HEAD       = 'HEAD';
+	const method_OPTIONS    = 'OPTIONS';
+	const method_TRACE      = 'TRACE';
+	const method_CONNECTION = 'CONNECTION';
 
 	/**
 	 * Parse input data (GET, POST) into Request object
@@ -22,7 +25,7 @@ interface IRequest
 	public function getHeaders($key = null);
 
 	public function setHeader($header, $value);
-	
+
 	public function removeHeader($header);
 
 	public function getMethod();
