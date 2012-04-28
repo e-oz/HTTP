@@ -208,7 +208,7 @@ class Request implements IRequest
 			{
 				if (strpos(PHP_VERSION, '5.4')!==false)
 				{
-					$data = http_build_query($data, null, null, PHP_QUERY_RFC3986);
+					$data = http_build_query($data, null, '&', PHP_QUERY_RFC3986);
 				}
 				else
 				{
