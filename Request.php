@@ -294,7 +294,11 @@ class Request implements IRequest
 			$header = trim($this->fgets($this->connection));
 			if (!empty($header))
 			{
-				if (empty($status_header)) $status_header = $header;
+				if (empty($status_header))
+				{
+					$status_header = $header;
+					continue;
+				}
 				if (strpos($header, ':')!==false)
 				{
 					$header                    = explode(':', $header);
