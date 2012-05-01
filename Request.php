@@ -313,6 +313,7 @@ class Request implements IRequest
 		{
 			$status_header = explode(' ', $status_header);
 			$Response->setStatusCode(intval(trim($status_header[1])));
+			$Response->setStatusReason(trim($status_header[2]));
 		}
 
 		//read body
