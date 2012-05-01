@@ -311,7 +311,7 @@ class Request implements IRequest
 		$Response->setHeaders($headers);
 		if (!empty($status_header))
 		{
-			$status_header = explode(' ', $status_header);
+			$status_header = explode(' ', $status_header, 3);
 			$Response->setStatusCode(intval(trim($status_header[1])));
 			$Response->setStatusReason(trim($status_header[2]));
 		}
