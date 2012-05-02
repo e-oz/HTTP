@@ -5,7 +5,14 @@ class SerializerJSON implements ISerializer
 {
 	public function serialize($data)
 	{
-		return json_encode($data);
+		if (strpos(PHP_VERSION, '5.4')!==false)
+		{
+			return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		}
+		else
+		{
+			return json_encode($data);
+		}
 	}
 
 	public function unserialize($data)

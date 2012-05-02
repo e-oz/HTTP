@@ -13,11 +13,28 @@ class Response implements IResponse
 	private $Serializer;
 	/** @var string */
 	private $status_reason;
+	private $protocol_version;
+	/** @var ICookie[] */
+	private $cookies;
 
 	public function __construct($body = '', $status_code = 200)
 	{
 		$this->body        = $body;
 		$this->status_code = $status_code;
+	}
+
+	public function setCookie(ICookie $Cookie)
+	{
+		$name = $Cookie->getName();
+		if (empty($name)) return false;
+		$name                 = $this->getNewOrExistingKeyInArray($name, $this->cookies);
+		$this->cookies[$name] = $Cookie;
+	}
+
+	public function getCookie($name)
+	{
+		$name = $this->getNewOrExistingKeyInArray($name, $this->cookies);
+		return isset($this->cookies[$name]) ? $this->cookies[$name] : NULL;
 	}
 
 	public function getStatusCode()
@@ -88,11 +105,22 @@ class Response implements IResponse
 	 */
 	public function Send()
 	{
+		header_remove();
 		$body    = $this->getBodyToSend();
 		$headers = $this->getHeadersToSend($body);
 		foreach ($headers as $header)
 		{
 			header($header);
+		}
+		if (!empty($this->cookies))
+		{
+			foreach ($this->cookies as $Cookie)
+			{
+				setcookie($Cookie->getName(), $Cookie->getValue(),
+					$Cookie->getExpire(), $Cookie->getPath(),
+					$Cookie->getDomain(), $Cookie->getSecure(),
+					$Cookie->getHttpOnly());
+			}
 		}
 		print $body;
 	}
@@ -111,8 +139,9 @@ class Response implements IResponse
 		{
 			$this->setHeader('Content-Length', strlen($body));
 		}
-		$protocol  = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
-		$headers[] = $protocol.' '.$this->getStatusCode().' '.$this->getStatusReason();
+
+		$headers[] = 'HTTP/'.$this->getProtocolVersion()
+				.' '.$this->getStatusCode().' '.$this->getStatusReason();
 		foreach ($this->getHeaders() as $header_key => $header_value)
 		{
 			$headers[] = $header_key.': '.$header_value;
@@ -267,5 +296,34 @@ class Response implements IResponse
 	public function setStatusReason($status_reason)
 	{
 		$this->status_reason = $status_reason;
+	}
+
+	public function removeHeader($header)
+	{
+		if (empty($header)) return false;
+		$header = $this->getNewOrExistingKeyInArray($header, $this->headers);
+		unset($this->headers[$header]);
+		return true;
+	}
+
+	public function getProtocolVersion()
+	{
+		if (empty($this->protocol_version))
+		{
+			if (isset($_SERVER['SERVER_PROTOCOL']))
+			{
+				list(, $this->protocol_version) = explode('/', $_SERVER['SERVER_PROTOCOL']);
+			}
+			else
+			{
+				$this->protocol_version = '1.0';
+			}
+		}
+		return $this->protocol_version;
+	}
+
+	public function setProtocolVersion($protocol_version)
+	{
+		$this->protocol_version = $protocol_version;
 	}
 }

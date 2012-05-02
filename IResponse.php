@@ -17,6 +17,8 @@ interface IResponse
 
 	public function getHeader($header);
 
+	public function removeHeader($header);
+
 	/**
 	 * Get body of the response
 	 * @return string
@@ -53,6 +55,14 @@ interface IResponse
 	public function setStatusReason($status_reason);
 
 	public function getStatusReason();
-	
+
 	public function __toString();
+
+	public function getProtocolVersion();
+
+	public function setProtocolVersion($protocol_version);
+
+	public function setCookie(ICookie $Cookie);
+
+	public function getCookie($name);
 }
