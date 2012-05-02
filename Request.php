@@ -28,8 +28,7 @@ class Request implements IRequest
 				$this->data = $_GET;
 				break;
 			case self::method_POST:
-				$this->data = $_POST;
-				break;
+			case self::method_PUT:
 			default:
 				if (!empty($_POST))
 				{
@@ -37,7 +36,24 @@ class Request implements IRequest
 				}
 				else
 				{
-					parse_str(file_get_contents('php://input'), $this->data);
+					$raw_data = file_get_contents('php://input');
+					if (!empty($raw_data))
+					{
+						parse_str($raw_data, $parse_by_values);
+						$value = current($parse_by_values);
+						if (count($parse_by_values)==1 && $value==='')
+						{
+							$this->data = $raw_data;
+						}
+						else
+						{
+							$this->data = $parse_by_values;
+						}
+					}
+					else
+					{
+						$this->data = $_GET;
+					}
 				}
 		}
 	}
@@ -356,12 +372,12 @@ class Request implements IRequest
 	}
 
 	/**
-	 * Set array of data
-	 * @param array $values
+	 * Set body of the request
+	 * @param array|string $value
 	 */
-	public function setData(array $values)
+	public function setData($value)
 	{
-		$this->data = $values;
+		$this->data = $value;
 	}
 
 	public function setProtocolVersion($protocol_version = '1.0')

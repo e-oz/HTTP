@@ -44,10 +44,10 @@ interface IRequest
 	public function getData($key = null);
 
 	/**
-	 * Set array of data
-	 * @param array $values
+	 * Set data of the request
+	 * @param array|string $value
 	 */
-	public function setData(array $values);
+	public function setData($value);
 
 	public function setDataKey($key, $value);
 
