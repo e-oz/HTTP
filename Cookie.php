@@ -7,9 +7,9 @@ class Cookie implements ICookie
 	private $expire = 0;
 	private $path, $domain;
 	private $secure = false;
-	private $http_only = false;
+	private $http_only = true;
 
-	public function __construct($name, $value = '', $expire = 0, $path = '', $domain = '', $secure = false, $http_only = false)
+	public function __construct($name, $value = '', $expire = 0, $path = '/', $domain = '', $secure = false, $http_only = true)
 	{
 		$this->name      = $name;
 		$this->value     = $value;
@@ -40,7 +40,7 @@ class Cookie implements ICookie
 		return $this->expire;
 	}
 
-	public function setHttpOnly($http_only = false)
+	public function setHttpOnly($http_only = true)
 	{
 		$this->http_only = $http_only;
 	}
