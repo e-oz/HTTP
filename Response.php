@@ -154,6 +154,10 @@ class Response implements IResponse
 		if (!empty($this->Serializer))
 		{
 			$body = $this->Serializer->serialize($this->body);
+			if ($this->Serializer->getContentType())
+			{
+				$this->setHeader('Content-Type', $this->Serializer->getContentType());
+			}
 			return $body;
 		}
 		else

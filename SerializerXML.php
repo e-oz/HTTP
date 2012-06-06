@@ -6,6 +6,7 @@ class SerializerXML implements ISerializer
 	private $xml_root_tag = 'response';
 	private $array_item_name = 'item';
 	private $array_item_attribute = 'ID';
+	private $content_type = 'text/xml;charset=utf-8';
 
 	public function serialize($data)
 	{
@@ -153,5 +154,15 @@ class SerializerXML implements ISerializer
 	public function setXmlRootTag($xml_root_tag)
 	{
 		$this->xml_root_tag = $xml_root_tag;
+	}
+
+	public function getContentType()
+	{
+		return $this->content_type;
+	}
+
+	public function setContentType($content_type)
+	{
+		$this->content_type = $content_type;
 	}
 }

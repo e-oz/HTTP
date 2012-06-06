@@ -15,4 +15,6 @@ interface ISerializer
 	 * @return string
 	 */
 	public function getMethodName();
+	
+	public function getContentType();
 }

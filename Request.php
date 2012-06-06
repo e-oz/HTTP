@@ -213,7 +213,7 @@ class Request implements IRequest
 		}
 		if (!$this->createConnection($socket_host, $url_data['port'], $errno, $errstr))
 		{
-			trigger_error('Can not connect to '.$socket_host.' port '.$url_data['port'].PHP_EOL.$errstr, E_USER_WARNING);
+			trigger_error('Can not connect to '.$socket_host.' port '.$url_data['port'].PHP_EOL.$errstr, E_USER_NOTICE);
 			return false;
 		}
 		$is_get_query = ($this->method===self::method_GET || $this->method===self::method_HEAD);
