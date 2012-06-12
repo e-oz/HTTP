@@ -36,6 +36,11 @@ class Response implements IResponse
 		$name = $this->getNewOrExistingKeyInArray($name, $this->cookies);
 		return isset($this->cookies[$name]) ? $this->cookies[$name] : NULL;
 	}
+	
+	public function getCookies()
+	{
+		return $this->cookies;
+	}
 
 	public function getStatusCode()
 	{

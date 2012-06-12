@@ -89,4 +89,14 @@ class Cookie implements ICookie
 	{
 		return $this->value;
 	}
+
+	public function getHeader()
+	{
+		return rawurlencode($this->name).'='.rawurlencode($this->value)
+				.!empty($this->expire) ? '; expires='.gmdate('D, d M Y H:i:s \G\M\T', $this->expire) : ''
+				.isset($this->path) ? '; path='.$this->path : ''
+				.isset($this->domain) ? '; domain='.$this->domain : ''
+				.!empty($this->secure) ? '; secure' : ''
+				.!empty($this->http_only) ? '; httponly' : '';
+	}
 }

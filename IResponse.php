@@ -64,5 +64,14 @@ interface IResponse
 
 	public function setCookie(ICookie $Cookie);
 
+	/**
+	 * @param string $name
+	 * @return ICookie
+	 */
 	public function getCookie($name);
+
+	/**
+	 * @return ICookie[]
+	 */
+	public function getCookies();
 }

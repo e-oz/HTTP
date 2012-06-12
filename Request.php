@@ -9,6 +9,9 @@ class Request implements IRequest
 	private $accept;
 	private $protocol_version = '1.0';
 	private $connection;
+	/** @var ICookie[] */
+	private $cookies;
+	private $files;
 
 	public function __construct()
 	{
@@ -56,6 +59,45 @@ class Request implements IRequest
 					}
 				}
 		}
+		if (!empty($_COOKIE))
+		{
+			foreach ($_COOKIE as $cookie_name=> $cookie_value)
+			{
+				$this->addCookie(new Cookie($cookie_name, $cookie_value));
+			}
+		}
+		$this->files = $_FILES;
+	}
+
+	public function addCookie(ICookie $Cookie)
+	{
+		$key                 = $this->getNewOrExistingKeyInArray($Cookie->getName(), $this->cookies);
+		$this->cookies[$key] = $Cookie;
+	}
+
+	public function removeCookie($name)
+	{
+		if (empty($name)) return false;
+		$key = $this->getNewOrExistingKeyInArray($name, $this->cookies);
+		unset($this->cookies[$key]);
+		return true;
+	}
+
+	public function getCookie($name)
+	{
+		if (empty($name)) return false;
+		$key = $this->getNewOrExistingKeyInArray($name, $this->cookies);
+		return isset($this->cookies[$key]) ? $this->cookies[$key] : NULL;
+	}
+	
+	public function getCookies()
+	{
+		return $this->cookies;
+	}
+
+	public function getFilesArray()
+	{
+		return $this->files;
 	}
 
 	/**
@@ -261,10 +303,7 @@ class Request implements IRequest
 		{
 			$this->setHeader('Content-Length', strlen($data));
 		}
-		foreach ($this->getHeaders() as $header_name => $header_value)
-		{
-			$this->writeToConnection("$header_name: $header_value\r\n");
-		}
+		$this->sendHeaders();
 		$this->writeToConnection("\r\n");
 
 		if (!$is_get_query && !empty($data))
@@ -277,6 +316,29 @@ class Request implements IRequest
 			return $this->ReadResponse($Response);
 		}
 		else return true;
+	}
+
+	protected function sendHeaders()
+	{
+		if (!empty($this->headers))
+		{
+			foreach ($this->headers as $header_name => $header_value)
+			{
+				$this->writeToConnection("$header_name: $header_value\r\n");
+			}
+		}
+		$this->sendCookies();
+	}
+
+	protected function sendCookies()
+	{
+		if (!empty($this->cookies))
+		{
+			foreach ($this->cookies as $Cookie)
+			{
+				$this->writeToConnection('Set-Cookie: '.$Cookie->getHeader()."\r\n");
+			}
+		}
 	}
 
 	protected function createConnection($host, $port, &$errno, &$errstr)

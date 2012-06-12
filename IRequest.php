@@ -73,4 +73,30 @@ interface IRequest
 	 * @return bool|IResponse
 	 */
 	public function Send($URL, IResponse $Response = NULL);
+
+	public function setProtocolVersion($protocol_version = '1.0');
+
+	public function addCookie(ICookie $Cookie);
+
+	/**
+	 * @param string $name
+	 * @return boolean
+	 */
+	public function removeCookie($name);
+
+	/**
+	 * @param string $name
+	 * @return ICookie
+	 */
+	public function getCookie($name);
+
+	/**
+	 * @return ICookie[]
+	 */
+	public function getCookies();
+
+	/**
+	 * @return array
+	 */
+	public function getFilesArray();
 }

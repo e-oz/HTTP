@@ -30,4 +30,6 @@ interface ICookie
 	public function setValue($value);
 
 	public function getValue();
+	
+	public function getHeader();
 }
