@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 class SerializerJSON implements ISerializer
 {
 	private $content_type = 'application/json;charset=utf-8';
@@ -8,7 +7,7 @@ class SerializerJSON implements ISerializer
 
 	public function serialize($data)
 	{
-		if (strpos(PHP_VERSION, '5.4')!==false)
+		if (PHP_VERSION_ID >= 50400)
 		{
 			$data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		}

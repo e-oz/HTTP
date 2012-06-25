@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 class Request implements IRequest
 {
 	private $method;
@@ -89,7 +88,7 @@ class Request implements IRequest
 		$key = $this->getNewOrExistingKeyInArray($name, $this->cookies);
 		return isset($this->cookies[$key]) ? $this->cookies[$key] : NULL;
 	}
-	
+
 	public function getCookies()
 	{
 		return $this->cookies;
@@ -264,7 +263,7 @@ class Request implements IRequest
 		{
 			if (is_array($data))
 			{
-				if (strpos(PHP_VERSION, '5.4')!==false)
+				if (PHP_VERSION_ID >= 50400)
 				{
 					$data = http_build_query($data, null, '&', PHP_QUERY_RFC3986);
 				}
@@ -291,7 +290,6 @@ class Request implements IRequest
 		$path = (isset($url_data['path']) ? $url_data['path'] : '/')
 				.(isset($url_data['query']) ? '?'.$url_data['query'] : '')
 				.(isset($url_data['fragment']) ? '#'.$url_data['fragment'] : '');
-
 		$this->setHeader('Host', NULL);
 		if (!$this->getHeaders('Connection'))
 		{
@@ -305,12 +303,10 @@ class Request implements IRequest
 		}
 		$this->sendHeaders();
 		$this->writeToConnection("\r\n");
-
 		if (!$is_get_query && !empty($data))
 		{
 			$this->writeToConnection($data);
 		}
-
 		if (!empty($Response))
 		{
 			return $this->ReadResponse($Response);
@@ -393,13 +389,11 @@ class Request implements IRequest
 			$Response->setStatusCode(intval(trim($status_header[1])));
 			$Response->setStatusReason(trim($status_header[2]));
 		}
-
 		//read body
 		$body = '';
 		while (!$this->feof($this->connection)) $body .= $this->fread($this->connection, 4096);
 		$this->fclose($this->connection);
 		$this->connection = NULL;
-
 		if (!empty($body))
 		{
 			$Serializer = $Response->getSerializer();
@@ -409,7 +403,6 @@ class Request implements IRequest
 			}
 			$Response->setBody($body);
 		}
-
 		return $Response;
 	}
 
