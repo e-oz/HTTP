@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 class SerializerXML implements ISerializer
 {
 	private $xml_root_tag = 'response';
@@ -62,7 +61,12 @@ class SerializerXML implements ISerializer
 
 	public function unserialize($data)
 	{
-		$xml    = simplexml_load_string($data);
+		$internal_errors_prev_setting  = libxml_use_internal_errors(true);
+		$disable_entities_prev_setting = libxml_disable_entity_loader(true);
+		libxml_clear_errors();
+		$xml = simplexml_load_string($data);
+		libxml_use_internal_errors($internal_errors_prev_setting);
+		libxml_disable_entity_loader($disable_entities_prev_setting);
 		$json   = json_encode($xml);
 		$result = json_decode($json, TRUE);
 		if (empty($result)) return false;
