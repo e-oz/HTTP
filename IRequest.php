@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 interface IRequest
 {
 	const method_GET        = 'GET';

@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 interface ICookie
 {
 	public function setDomain($domain);
@@ -30,6 +29,6 @@ interface ICookie
 	public function setValue($value);
 
 	public function getValue();
-	
+
 	public function getHeader();
 }

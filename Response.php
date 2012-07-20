@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 class Response implements IResponse
 {
 	/** @var int */
@@ -36,7 +35,7 @@ class Response implements IResponse
 		$name = $this->getNewOrExistingKeyInArray($name, $this->cookies);
 		return isset($this->cookies[$name]) ? $this->cookies[$name] : NULL;
 	}
-	
+
 	public function getCookies()
 	{
 		return $this->cookies;
@@ -144,7 +143,6 @@ class Response implements IResponse
 		{
 			$this->setHeader('Content-Length', strlen($body));
 		}
-
 		$headers[] = 'HTTP/'.$this->getProtocolVersion()
 				.' '.$this->getStatusCode().' '.$this->getStatusReason();
 		foreach ($this->getHeaders() as $header_key => $header_value)
@@ -156,7 +154,7 @@ class Response implements IResponse
 
 	private function getBodyToSend()
 	{
-		if (!empty($this->Serializer))
+		if (!empty($this->Serializer) && $this->body!=='')
 		{
 			$body = $this->Serializer->serialize($this->body);
 			if ($this->Serializer->getContentType())

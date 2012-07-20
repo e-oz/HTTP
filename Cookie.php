@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 class Cookie implements ICookie
 {
 	private $name, $value;

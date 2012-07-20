@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 trait Factory
 {
 	protected function getNewResponse()

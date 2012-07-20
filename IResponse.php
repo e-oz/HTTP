@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 interface IResponse
 {
 	public function getStatusCode();

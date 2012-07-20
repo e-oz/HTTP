@@ -1,6 +1,5 @@
 <?php
 namespace Jamm\HTTP;
-
 interface ISerializer
 {
 	/**
@@ -8,13 +7,13 @@ interface ISerializer
 	 * @return string
 	 */
 	public function serialize($data);
-	
+
 	public function unserialize($data);
 
 	/**
 	 * @return string
 	 */
 	public function getMethodName();
-	
+
 	public function getContentType();
 }
