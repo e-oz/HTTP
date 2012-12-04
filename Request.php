@@ -60,7 +60,7 @@ class Request implements IRequest
 		}
 		if (!empty($_COOKIE))
 		{
-			foreach ($_COOKIE as $cookie_name=> $cookie_value)
+			foreach ($_COOKIE as $cookie_name => $cookie_value)
 			{
 				$this->addCookie(new Cookie($cookie_name, $cookie_value));
 			}
@@ -224,9 +224,9 @@ class Request implements IRequest
 		if (!empty($Response))
 		{
 			$Serializer = $Response->getSerializer();
-			if (!empty($Serializer))
+			if (!empty($Serializer) && empty($this->accept))
 			{
-				/** @var ISerializer $Serializer  */
+				/** @var ISerializer $Serializer */
 				$this->SetAccept($Serializer->getMethodName());
 			}
 		}
@@ -387,7 +387,10 @@ class Request implements IRequest
 		{
 			$status_header = explode(' ', $status_header, 3);
 			$Response->setStatusCode(intval(trim($status_header[1])));
-			$Response->setStatusReason(trim($status_header[2]));
+			if (isset($status_header[2]))
+			{
+				$Response->setStatusReason(trim($status_header[2]));
+			}
 		}
 		//read body
 		$body = '';
