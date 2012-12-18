@@ -24,7 +24,10 @@ class SerializerJSON implements ISerializer
 
 	public function unserialize($data)
 	{
-		return json_decode($data, true);
+		$err_level = error_reporting(0);
+		$result    = json_decode($data, true);
+		error_reporting($err_level);
+		return $result;
 	}
 
 	/**
