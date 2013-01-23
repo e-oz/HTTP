@@ -7,10 +7,12 @@ class Request implements IRequest
 	private $data;
 	private $accept;
 	private $protocol_version = '1.0';
-	private $connection;
+	/** @var Connection */
+	private $Connection;
 	/** @var ICookie[] */
 	private $cookies;
 	private $files;
+	private $response_timeout = 30;
 
 	public function __construct()
 	{
@@ -221,9 +223,11 @@ class Request implements IRequest
 	 */
 	public function Send($URL, IResponse $Response = NULL)
 	{
+		$return_response = false;
 		if (!empty($Response))
 		{
-			$Serializer = $Response->getSerializer();
+			$return_response = true;
+			$Serializer      = $Response->getSerializer();
 			if (!empty($Serializer) && empty($this->accept))
 			{
 				/** @var ISerializer $Serializer */
@@ -252,7 +256,7 @@ class Request implements IRequest
 		{
 			$socket_host = $url_data['host'];
 		}
-		if (!$this->createConnection($socket_host, $url_data['port'], $errno, $errstr))
+		if (!$this->getConnectionResource($socket_host, $url_data['port'], $errno, $errstr))
 		{
 			trigger_error('Can not connect to '.$socket_host.' port '.$url_data['port'].PHP_EOL.$errstr, E_USER_NOTICE);
 			return false;
@@ -291,7 +295,7 @@ class Request implements IRequest
 				.(isset($url_data['query']) ? '?'.$url_data['query'] : '')
 				.(isset($url_data['fragment']) ? '#'.$url_data['fragment'] : '');
 		$this->setHeader('Host', NULL);
-		if (!$this->getHeaders('Connection'))
+		if (!$this->getHeaders('Connection') && !$this->Connection->isKeepAlive())
 		{
 			$this->setHeader('Connection', 'Close');
 		}
@@ -307,11 +311,19 @@ class Request implements IRequest
 		{
 			$this->writeToConnection($data);
 		}
-		if (!empty($Response))
+		if ($return_response)
 		{
-			return $this->ReadResponse($Response);
+			$this->ReadResponse($Response);
 		}
-		else return true;
+		if (!$this->Connection->isKeepAlive())
+		{
+			$this->Connection->close();
+		}
+		if ($return_response)
+		{
+			return $Response;
+		}
+		return true;
 	}
 
 	protected function sendHeaders()
@@ -337,16 +349,43 @@ class Request implements IRequest
 		}
 	}
 
-	protected function createConnection($host, $port, &$errno, &$errstr)
+	protected function getConnectionResource($host, $port, &$errno, &$errstr)
 	{
-		$this->connection = fsockopen($host, $port, $errno, $errstr);
-		if (!$this->connection) return false;
-		return true;
+		$type = strtolower($this->getHeaders('Connection'));
+		if (empty($this->Connection) ||
+				!is_resource($this->Connection->getResource()) ||
+				$this->Connection->getHost()!=$host ||
+				$this->Connection->getPort()!=$port ||
+				strtolower($this->Connection->getType())!=$type
+		)
+		{
+			$resource = fsockopen($host, $port, $errno, $errstr);
+			if (!$resource) return false;
+			$this->Connection = $this->getNewConnection($resource, $host, $port, $type);
+		}
+		return $this->Connection->getResource();
+	}
+
+	protected function getNewConnection($resource, $host, $port, $type)
+	{
+		return new Connection($resource, $host, $port, $type);
+	}
+
+	protected function reconnect()
+	{
+		$this->getConnectionResource($this->Connection->getHost(),
+			$this->Connection->getPort(), $errno, $errstr);
 	}
 
 	protected function writeToConnection($data)
 	{
-		if (!fwrite($this->connection, $data))
+		$resource = $this->Connection->getResource();
+		if (empty($resource))
+		{
+			trigger_error("Can't write to empty resource", E_USER_WARNING);
+			return false;
+		}
+		if (fwrite($resource, $data)===false)
 		{
 			trigger_error('Can not write to connection!', E_USER_WARNING);
 			return false;
@@ -363,9 +402,20 @@ class Request implements IRequest
 		//read headers
 		$status_header = '';
 		$headers       = array();
-		while (!$this->feof($this->connection))
+		$start_time    = time();
+		$connection    = $this->Connection->getResource();
+		if (empty($connection))
 		{
-			$header = trim($this->fgets($this->connection));
+			return false;
+		}
+		while (!$this->feof($connection))
+		{
+			if ($this->response_timeout > 0 && ((time()-$start_time) > $this->response_timeout))
+			{
+				$this->Connection->close();
+				return false;
+			}
+			$header = trim($this->fgets($connection));
 			if (!empty($header))
 			{
 				if (empty($status_header))
@@ -392,11 +442,19 @@ class Request implements IRequest
 				$Response->setStatusReason(trim($status_header[2]));
 			}
 		}
-		//read body
-		$body = '';
-		while (!$this->feof($this->connection)) $body .= $this->fread($this->connection, 4096);
-		$this->fclose($this->connection);
-		$this->connection = NULL;
+		if (strtolower($Response->getHeader('Connection'))!='keep-alive'
+				&& $this->Connection->isKeepAlive()
+		)
+		{
+			$this->Connection->setType($Response->getHeader('Connection'));
+		}
+
+		$body = $this->getResponseBody($Response, $connection);
+		if ($body===false)
+		{
+			$this->Connection->close();
+		}
+
 		if (!empty($body))
 		{
 			$Serializer = $Response->getSerializer();
@@ -409,6 +467,100 @@ class Request implements IRequest
 		return $Response;
 	}
 
+	/**
+	 * @param IResponse $Response
+	 * @param resource $connection
+	 * @return bool
+	 */
+	protected function getResponseBody(IResponse $Response, $connection)
+	{
+		if (stripos($Response->getHeader('transfer-encoding'), 'chunked')!==false)
+		{
+			$body = $this->getChunkedResponse($connection);
+		}
+		else
+		{
+			$read_size = intval($Response->getHeader('Content-Length'));
+			if ($read_size <= 0)
+			{
+				if ($this->Connection->isKeepAlive())
+				{
+					return '';
+				}
+				$read_size = -1;
+			}
+			$body = $this->stream_get_contents($connection, $read_size);
+		}
+		if ($body===false)
+		{
+			$this->Connection->close();
+			return false;
+		}
+		if (!empty($body) && stripos($Response->getHeader('content-encoding'), 'gzip')!==false)
+		{
+			$body = $this->getUnzippedBody($body);
+		}
+		return $body;
+	}
+
+	protected function getChunkedResponse($connection)
+	{
+		$body       = '';
+		$start_time = time();
+		while (true)
+		{
+			if ($this->response_timeout > 0 && ((time()-$start_time) > $this->response_timeout))
+			{
+				$this->Connection->close();
+				return false;
+			}
+			$data = '';
+			do
+			{
+				$read = fread($connection, 1);
+				if ($read===false)
+				{
+					$this->Connection->close();
+					return false;
+				}
+				$data .= $read;
+			} while (strpos($data, "\r\n")===false);
+
+			if (strpos($data, ' ')!==false)
+			{
+				list($chunksize, $chunkext) = explode(' ', $data, 2);
+			}
+			else
+			{
+				$chunksize = $data;
+				$chunkext  = '';
+			}
+
+			$chunksize = (int)base_convert($chunksize, 16, 10);
+
+			if ($chunksize===0)
+			{
+				fread($connection, 2); // read trailing "\r\n"
+				return $body;
+			}
+			else
+			{
+				$data = $this->stream_get_contents($connection, $chunksize+2);
+				if ($data===false)
+				{
+					$this->Connection->close();
+					return false;
+				}
+				$body .= substr($data, 0, -2); // -2 to remove the "\r\n" before the next chunk
+			}
+		}
+	}
+
+	protected function getUnzippedBody($body)
+	{
+		return gzinflate(substr($body, 10));
+	}
+
 	protected function fgets($handler)
 	{
 		return fgets($handler);
@@ -419,9 +571,9 @@ class Request implements IRequest
 		return feof($handler);
 	}
 
-	protected function fread($handler, $length)
+	protected function stream_get_contents($handler, $length = -1)
 	{
-		return fread($handler, $length);
+		return stream_get_contents($handler, $length);
 	}
 
 	protected function fclose($handler)
@@ -441,5 +593,25 @@ class Request implements IRequest
 	public function setProtocolVersion($protocol_version = '1.0')
 	{
 		$this->protocol_version = $protocol_version;
+	}
+
+	public function getConnection()
+	{
+		return $this->Connection;
+	}
+
+	public function setConnection($Connection)
+	{
+		$this->Connection = $Connection;
+	}
+
+	public function getResponseTimeout()
+	{
+		return $this->response_timeout;
+	}
+
+	public function setResponseTimeout($response_timeout)
+	{
+		$this->response_timeout = $response_timeout;
 	}
 }
