@@ -6,7 +6,7 @@ class Request implements IRequest
 	private $headers;
 	private $data;
 	private $accept;
-	private $protocol_version = '1.0';
+	private $protocol_version = '1.1';
 	/** @var Connection */
 	private $Connection;
 	/** @var ICookie[] */
@@ -99,6 +99,11 @@ class Request implements IRequest
 	public function getFilesArray()
 	{
 		return $this->files;
+	}
+
+	public function getProtocolVersion()
+	{
+		return $this->protocol_version;
 	}
 
 	/**
