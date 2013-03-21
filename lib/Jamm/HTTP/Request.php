@@ -13,6 +13,7 @@ class Request implements IRequest
 	private $cookies;
 	private $files;
 	private $response_timeout = 30;
+	private $is_connection_closed = false;
 
 	public function __construct()
 	{
@@ -300,10 +301,6 @@ class Request implements IRequest
 				.(isset($url_data['query']) ? '?'.$url_data['query'] : '')
 				.(isset($url_data['fragment']) ? '#'.$url_data['fragment'] : '');
 		$this->setHeader('Host', NULL);
-		if (!$this->getHeaders('Connection') && !$this->Connection->isKeepAlive())
-		{
-			$this->setHeader('Connection', 'Close');
-		}
 		$this->writeToConnection($this->method.' '.$path.' HTTP/'.$this->protocol_version."\r\n");
 		$this->writeToConnection("Host: {$url_data['host']}\r\n");
 		if (!$is_get_query)
@@ -323,6 +320,7 @@ class Request implements IRequest
 		if (!$this->Connection->isKeepAlive())
 		{
 			$this->Connection->close();
+			$this->is_connection_closed = true;
 		}
 		if ($return_response)
 		{
@@ -357,6 +355,7 @@ class Request implements IRequest
 	protected function getConnectionResource($host, $port, &$errno, &$errstr)
 	{
 		$type = strtolower($this->getHeaders('Connection'));
+		if (empty($type)) $type = 'keep-alive';
 		if (empty($this->Connection) ||
 				!is_resource($this->Connection->getResource()) ||
 				$this->Connection->getHost()!=$host ||
@@ -374,6 +373,11 @@ class Request implements IRequest
 	protected function getNewConnection($resource, $host, $port, $type)
 	{
 		return new Connection($resource, $host, $port, $type);
+	}
+
+	public function isConnectionClosed()
+	{
+		return $this->is_connection_closed;
 	}
 
 	protected function reconnect()

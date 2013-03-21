@@ -15,7 +15,7 @@ class Connection
 	 * @param string $port
 	 * @param string $type
 	 */
-	public function __construct($resource = null, $host = '', $port = '', $type = '')
+	public function __construct($resource = null, $host = '', $port = '', $type = 'keep-alive')
 	{
 		$this->resource = $resource;
 		$this->host     = $host;

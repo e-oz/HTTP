@@ -98,4 +98,6 @@ interface IRequest
 	 * @return array
 	 */
 	public function getFilesArray();
+
+	public function isConnectionClosed();
 }
