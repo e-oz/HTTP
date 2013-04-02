@@ -267,7 +267,7 @@ class Request implements IRequest
 			trigger_error('Can not connect to '.$socket_host.' port '.$url_data['port'].PHP_EOL.$errstr, E_USER_NOTICE);
 			return false;
 		}
-		$is_get_query = ($this->method===self::method_GET || $this->method===self::method_HEAD);
+		$is_get_query = ($this->method===self::method_GET || $this->method===self::method_HEAD || $this->method===self::method_DELETE);
 		$data         = $this->getData();
 		if (!empty($data))
 		{
