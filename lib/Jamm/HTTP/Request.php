@@ -66,6 +66,10 @@ class Request implements IRequest
 
 	protected function getInputDataByContentType($input, $content_type)
 	{
+		if (is_array($input))
+		{
+			return $input;
+		}
 		if (stripos($content_type, 'application/json')!==false)
 		{
 			if (($data = json_decode(trim($input), true)))
