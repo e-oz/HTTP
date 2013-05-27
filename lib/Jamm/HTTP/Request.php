@@ -66,13 +66,14 @@ class Request implements IRequest
 
 	protected function getInputDataByContentType($input, $content_type)
 	{
-		if (is_array($input))
+		if (empty($input) || is_array($input))
 		{
 			return $input;
 		}
 		if (stripos($content_type, 'application/json')!==false)
 		{
-			if (($data = json_decode(trim($input), true)))
+			$data = json_decode(trim($input), true);
+			if (!json_last_error())
 			{
 				return $data;
 			}
@@ -84,6 +85,10 @@ class Request implements IRequest
 		else
 		{
 			parse_str($input, $parse_by_values);
+			if (empty($parse_by_values))
+			{
+				return $input;
+			}
 			$value = current($parse_by_values);
 			if (count($parse_by_values)==1 && $value==='')
 			{
