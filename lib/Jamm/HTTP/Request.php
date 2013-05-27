@@ -1,5 +1,6 @@
 <?php
 namespace Jamm\HTTP;
+
 class Request implements IRequest
 {
 	private $method;
@@ -26,6 +27,7 @@ class Request implements IRequest
 		$this->headers = $_SERVER;
 		$this->accept  = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
 		$this->method  = $_SERVER['REQUEST_METHOD'];
+		$content_type  = $_SERVER['CONTENT_TYPE'];
 		switch ($this->method)
 		{
 			case self::method_HEAD:
@@ -37,23 +39,14 @@ class Request implements IRequest
 			default:
 				if (!empty($_POST))
 				{
-					$this->data = $_POST;
+					$this->data = $this->getInputDataByContentType($_POST, $content_type);
 				}
 				else
 				{
 					$raw_data = file_get_contents('php://input');
 					if (!empty($raw_data))
 					{
-						parse_str($raw_data, $parse_by_values);
-						$value = current($parse_by_values);
-						if (count($parse_by_values)==1 && $value==='')
-						{
-							$this->data = $raw_data;
-						}
-						else
-						{
-							$this->data = $parse_by_values;
-						}
+						$this->data = $this->getInputDataByContentType($raw_data, $content_type);
 					}
 					else
 					{
@@ -71,6 +64,34 @@ class Request implements IRequest
 		$this->files = $_FILES;
 	}
 
+	protected function getInputDataByContentType($input, $content_type)
+	{
+		if (stripos($content_type, 'application/json')!==false)
+		{
+			if (($data = json_decode(trim($input), true)))
+			{
+				return $data;
+			}
+			else
+			{
+				return $input;
+			}
+		}
+		else
+		{
+			parse_str($input, $parse_by_values);
+			$value = current($parse_by_values);
+			if (count($parse_by_values)==1 && $value==='')
+			{
+				return $input;
+			}
+			else
+			{
+				return $parse_by_values;
+			}
+		}
+	}
+
 	public function addCookie(ICookie $Cookie)
 	{
 		$key                 = $this->getNewOrExistingKeyInArray($Cookie->getName(), $this->cookies);
@@ -79,7 +100,10 @@ class Request implements IRequest
 
 	public function removeCookie($name)
 	{
-		if (empty($name)) return false;
+		if (empty($name))
+		{
+			return false;
+		}
 		$key = $this->getNewOrExistingKeyInArray($name, $this->cookies);
 		unset($this->cookies[$key]);
 		return true;
@@ -87,7 +111,10 @@ class Request implements IRequest
 
 	public function getCookie($name)
 	{
-		if (empty($name)) return false;
+		if (empty($name))
+		{
+			return false;
+		}
 		$key = $this->getNewOrExistingKeyInArray($name, $this->cookies);
 		return isset($this->cookies[$key]) ? $this->cookies[$key] : NULL;
 	}
@@ -119,7 +146,10 @@ class Request implements IRequest
 			$key = $this->getNewOrExistingKeyInArray($key, $this->headers);
 			return isset($this->headers[$key]) ? $this->headers[$key] : NULL;
 		}
-		else return $this->headers;
+		else
+		{
+			return $this->headers;
+		}
 	}
 
 	/**
@@ -138,7 +168,10 @@ class Request implements IRequest
 	 */
 	public function getData($key = null)
 	{
-		if (empty($key)) return $this->data;
+		if (empty($key))
+		{
+			return $this->data;
+		}
 		else
 		{
 			return isset($this->data[$key]) ? $this->data[$key] : NULL;
@@ -161,13 +194,19 @@ class Request implements IRequest
 	 */
 	public function isAcceptable($type)
 	{
-		if (empty($type) || (stripos($this->getAccept(), $type)!==false)) return true;
+		if (empty($type) || (stripos($this->getAccept(), $type)!==false))
+		{
+			return true;
+		}
 		return false;
 	}
 
 	public function setHeader($header, $value)
 	{
-		if (empty($header)) return false;
+		if (empty($header))
+		{
+			return false;
+		}
 		if ($value===NULL || $value==='')
 		{
 			$this->removeHeader($header);
@@ -187,7 +226,10 @@ class Request implements IRequest
 
 	private function getNewOrExistingKeyInArray($key, $array)
 	{
-		if (empty($array)) return $key;
+		if (empty($array))
+		{
+			return $key;
+		}
 		$keys    = array_keys($array);
 		$low_key = strtolower($key);
 		foreach ($keys as $existing_key)
@@ -207,7 +249,10 @@ class Request implements IRequest
 	public function setMethod($method)
 	{
 		$this->method = strtoupper($method);
-		if ($this->method!=self::method_GET) $this->setHeader('Content-type', 'application/x-www-form-urlencoded');
+		if ($this->method!=self::method_GET)
+		{
+			$this->setHeader('Content-type', 'application/x-www-form-urlencoded');
+		}
 	}
 
 	public function setDataKey($key, $value)
@@ -355,7 +400,10 @@ class Request implements IRequest
 	protected function getConnectionResource($host, $port, &$errno, &$errstr)
 	{
 		$type = strtolower($this->getHeaders('Connection'));
-		if (empty($type)) $type = 'keep-alive';
+		if (empty($type))
+		{
+			$type = 'keep-alive';
+		}
 		if (empty($this->Connection) ||
 				!is_resource($this->Connection->getResource()) ||
 				$this->Connection->getHost()!=$host ||
@@ -364,7 +412,10 @@ class Request implements IRequest
 		)
 		{
 			$resource = fsockopen($host, $port, $errno, $errstr);
-			if (!$resource) return false;
+			if (!$resource)
+			{
+				return false;
+			}
 			$this->Connection = $this->getNewConnection($resource, $host, $port, $type);
 		}
 		return $this->Connection->getResource();
@@ -437,9 +488,15 @@ class Request implements IRequest
 					$header                    = explode(':', $header);
 					$headers[trim($header[0])] = trim($header[1]);
 				}
-				else $headers[] = $header;
+				else
+				{
+					$headers[] = $header;
+				}
 			}
-			else break;
+			else
+			{
+				break;
+			}
 		}
 		$Response->setHeaders($headers);
 		if (!empty($status_header))
