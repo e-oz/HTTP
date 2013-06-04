@@ -15,6 +15,7 @@ class Request implements IRequest
 	private $files;
 	private $response_timeout = 30;
 	private $is_connection_closed = false;
+	private $raw_input_data;
 
 	public function __construct()
 	{
@@ -43,7 +44,7 @@ class Request implements IRequest
 				}
 				else
 				{
-					$raw_data = file_get_contents('php://input');
+					$raw_data = $this->getRawInputData();
 					if (!empty($raw_data))
 					{
 						$this->data = $this->getInputDataByContentType($raw_data, $content_type);
@@ -62,6 +63,15 @@ class Request implements IRequest
 			}
 		}
 		$this->files = $_FILES;
+	}
+
+	public function getRawInputData()
+	{
+		if (empty($this->raw_input_data))
+		{
+			$this->raw_input_data = file_get_contents('php://input');
+		}
+		return $this->raw_input_data;
 	}
 
 	protected function getInputDataByContentType($input, $content_type)

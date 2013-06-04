@@ -100,4 +100,6 @@ interface IRequest
 	public function getFilesArray();
 
 	public function isConnectionClosed();
+
+	public function getRawInputData();
 }
