@@ -11,11 +11,11 @@ class SerializerXML implements ISerializer
 	{
 		if (!is_array($data)) $data = array($data);
 		$XML_Element = new \SimpleXMLElement("<?xml version=\"1.0\"?><".$this->xml_root_tag."></".$this->xml_root_tag.">");
-		$this->array_to_xml($data, $XML_Element);
+		$this->arrayToXML($data, $XML_Element);
 		return $XML_Element->asXML();
 	}
 
-	protected function array_to_xml($data_array, \SimpleXMLElement $XML)
+	protected function arrayToXML($data_array, \SimpleXMLElement $XML)
 	{
 		$consecutive_counter = 0;
 		foreach ($data_array as $key => $value)
@@ -25,7 +25,7 @@ class SerializerXML implements ISerializer
 				if (!is_numeric($key))
 				{
 					$subnode = $XML->addChild($key);
-					$this->array_to_xml($value, $subnode);
+					$this->arrayToXML($value, $subnode);
 				}
 				else
 				{
@@ -34,7 +34,7 @@ class SerializerXML implements ISerializer
 					{
 						$subnode->addAttribute($this->array_item_attribute, $key);
 					}
-					$this->array_to_xml($value, $subnode);
+					$this->arrayToXML($value, $subnode);
 				}
 			}
 			else
@@ -74,13 +74,13 @@ class SerializerXML implements ISerializer
 		{
 			$result = $result[$this->xml_root_tag];
 		}
-		$this->fix_json_xml_array($result, $this->xml_root_tag);
+		$this->fixJSONArray($result, $this->xml_root_tag);
 		return $result;
 	}
 
-	private function fix_json_xml_array(&$xmlarr, $parent_name = '', $pre_parent_name = '')
+	private function fixJSONArray(&$xmlarr, $parent_name = '', $pre_parent_name = '')
 	{
-		foreach ($xmlarr as $key=> &$value)
+		foreach ($xmlarr as $key => &$value)
 		{
 			if (is_array($value))
 			{
@@ -111,7 +111,7 @@ class SerializerXML implements ISerializer
 				}
 				else
 				{
-					$this->fix_json_xml_array($value, $key, $parent_name);
+					$this->fixJSONArray($value, $key, $parent_name);
 				}
 			}
 			else
