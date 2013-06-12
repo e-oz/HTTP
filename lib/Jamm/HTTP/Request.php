@@ -27,8 +27,8 @@ class Request implements IRequest
 	{
 		$this->headers = $_SERVER;
 		$this->accept  = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
-		$this->method  = $_SERVER['REQUEST_METHOD'];
-		$content_type  = $_SERVER['CONTENT_TYPE'];
+		$this->method  = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'CLI';
+		$content_type  = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
 		switch ($this->method)
 		{
 			case self::method_HEAD:
