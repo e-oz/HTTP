@@ -15,6 +15,7 @@ class Response implements IResponse
 	private $protocol_version;
 	/** @var ICookie[] */
 	private $cookies;
+	private $send_body = true;
 
 	public function __construct($body = '', $status_code = 200)
 	{
@@ -46,7 +47,7 @@ class Response implements IResponse
 		return $this->status_code;
 	}
 
-	/** @param int $status_code     */
+	/** @param int $status_code */
 	public function setStatusCode($status_code)
 	{
 		$this->status_code = (int)$status_code;
@@ -126,7 +127,10 @@ class Response implements IResponse
 					$Cookie->getHttpOnly());
 			}
 		}
-		print $body;
+		if ($this->send_body)
+		{
+			print $body;
+		}
 	}
 
 	public function __toString()
@@ -332,5 +336,21 @@ class Response implements IResponse
 	public function setProtocolVersion($protocol_version)
 	{
 		$this->protocol_version = $protocol_version;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getSendBody()
+	{
+		return $this->send_body;
+	}
+
+	/**
+	 * @param boolean $send_body
+	 */
+	public function setSendBody($send_body)
+	{
+		$this->send_body = $send_body;
 	}
 }

@@ -4,7 +4,7 @@ interface IResponse
 {
 	public function getStatusCode();
 
-	/** @param int $status_code     */
+	/** @param int $status_code */
 	public function setStatusCode($status_code);
 
 	/**
@@ -73,4 +73,9 @@ interface IResponse
 	 * @return ICookie[]
 	 */
 	public function getCookies();
+
+	/**
+	 * @param boolean $send_body
+	 */
+	public function setSendBody($send_body);
 }
