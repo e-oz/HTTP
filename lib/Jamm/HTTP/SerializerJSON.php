@@ -4,6 +4,7 @@ class SerializerJSON implements ISerializer
 {
 	private $content_type = 'application/json;charset=utf-8';
 	private $jsonp_callback_name;
+	private $json_prefix = '';
 
 	public function serialize($data)
 	{
@@ -18,6 +19,10 @@ class SerializerJSON implements ISerializer
 		if (!empty($this->jsonp_callback_name))
 		{
 			$data = $this->jsonp_callback_name.'('.$data.')';
+		}
+		elseif (!empty($this->json_prefix))
+		{
+			$data = $this->json_prefix.$data;
 		}
 		return $data;
 	}
@@ -56,5 +61,10 @@ class SerializerJSON implements ISerializer
 	public function setJSONPCallbackName($jsonp_callback_name)
 	{
 		$this->jsonp_callback_name = $jsonp_callback_name;
+	}
+
+	public function setJSONPrefix($prefix = ")]}',\n")
+	{
+		$this->json_prefix = $prefix;
 	}
 }
