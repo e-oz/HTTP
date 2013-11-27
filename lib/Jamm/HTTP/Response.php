@@ -172,9 +172,10 @@ class Response implements IResponse
 			$body = $this->body;
 			if (!is_scalar($body))
 			{
-				$body = 'Result of request should be serialized to send through. Specify in "ACCEPT" header type of acceptable method of serialization.';
-				$this->setStatusCode(415);
-				$this->setStatusReason('Unsupported Media Type');
+        $Serializer=new SerializerJSON();
+        trigger_error('Result of request should be serialized to send through. Specify in "ACCEPT" header type of acceptable method of serialization.',E_USER_WARNING);
+				$body = $Serializer->serialize($body);
+        $this->setHeader('Content-Type', $Serializer->getContentType());
 				return $body;
 			}
 			return $body;
