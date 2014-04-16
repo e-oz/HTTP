@@ -241,9 +241,7 @@ class Request implements IRequest
   {
     $this->method = strtoupper($method);
     if ($this->method != self::method_GET) {
-      if (!$this->getHeaders('Content-type')) {
-        $this->setHeader('Content-type', 'application/x-www-form-urlencoded');
-      }
+      $this->setHeader('Content-type', 'application/x-www-form-urlencoded');
     }
   }
 
