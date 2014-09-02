@@ -12,7 +12,7 @@ class Cookie implements ICookie
 	{
 		$this->name      = $name;
 		$this->value     = $value;
-		$this->expire    = $expire;
+		$this->expire    = is_numeric($expire)?gmdate('D, d M Y H:i:s \G\M\T', $this->expire):$this->expire;
 		$this->path      = $path;
 		$this->domain    = $domain;
 		$this->secure    = $secure;
@@ -92,10 +92,36 @@ class Cookie implements ICookie
 	public function getHeader()
 	{
 		return rawurlencode($this->name).'='.rawurlencode($this->value)
-				.!empty($this->expire) ? '; expires='.gmdate('D, d M Y H:i:s \G\M\T', $this->expire) : ''
-				.isset($this->path) ? '; path='.$this->path : ''
-				.isset($this->domain) ? '; domain='.$this->domain : ''
-				.!empty($this->secure) ? '; secure' : ''
-				.!empty($this->http_only) ? '; httponly' : '';
+				.(empty($this->expire) ? '; expires='.$this->expire : '')
+				.(isset($this->path) ? '; path='.$this->path : '')
+				.(isset($this->domain) ? '; domain='.$this->domain : '')
+				.(!empty($this->secure) ? '; secure' : '')
+				.(!empty($this->http_only) ? '; httponly' : '');
 	}
+
+    /**
+     * @param $cookieString String
+     * @return bool|Cookie
+     */
+    public static function FromString($cookieString)
+    {
+        if(preg_match_all('/([^;,\s]*?)=([^;]*)/', $cookieString, $preg)){
+            $params = array();
+            $cookieName = $preg[1][0];
+            $cookieValue = $preg[2][0];
+            for($i = 1; $i != count($preg[0]); $i++)
+                $params[$preg[1][$i]] = $preg[2][$i];
+
+            return new static(
+                $cookieName,
+                $cookieValue,
+                isset($params['expires'])?$params['expires']:0,
+                isset($params['path'])?$params['path']:'/',
+                isset($params['domain'])?$params['domain']:'',
+                isset($params['secure'])?$params['secure']:false
+            );
+        }
+        else
+            return false;
+    }
 }
