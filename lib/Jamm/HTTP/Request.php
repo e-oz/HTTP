@@ -442,7 +442,15 @@ class Request implements IRequest
         }
         if (strpos($header, ':') !== false) {
           $header                    = explode(':', $header);
-          $headers[trim($header[0])] = trim($header[1]);
+          $key = trim($header[0]);
+          $value = trim($header[1]);
+          if(isset($headers[$key]))
+              if(is_array($headers[$key]))
+                  $headers[$key][] = $value;
+              else
+                  $headers[$key] = array($headers[$key], $value);
+          else
+            $headers[$key] = $value;
         }
         else {
           $headers[] = $header;
@@ -452,7 +460,23 @@ class Request implements IRequest
         break;
       }
     }
+
     $Response->setHeaders($headers);
+
+    if(isset($headers['Set-Cookie'])){
+        $cookies = array();
+        if(is_array($headers['Set-Cookie']))
+            $cookies = $headers['Set-Cookie'];
+        else
+            $cookies[] = $headers['Set-Cookie'];
+
+        foreach($cookies as $cookieString){
+            $cookie = Cookie::FromString($cookieString);
+            if($cookie !== false)
+                $Response->setCookie($cookie);
+        }
+    }
+
     if (!empty($status_header)) {
       $status_header = explode(' ', $status_header, 3);
       $Response->setStatusCode(intval(trim($status_header[1])));

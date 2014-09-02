@@ -31,6 +31,11 @@ class Response implements IResponse
 		$this->cookies[$name] = $Cookie;
 	}
 
+    public function setCookies($cookies)
+    {
+        $this->cookies = array_merge($this->cookies, $cookies);
+    }
+
 	public function getCookie($name)
 	{
 		$name = $this->getNewOrExistingKeyInArray($name, $this->cookies);
