@@ -91,11 +91,12 @@ class Cookie implements ICookie
 
 	public function getHeader()
 	{
-		return rawurlencode($this->name).'='.rawurlencode($this->value)
-				.!empty($this->expire) ? '; expires='.gmdate('D, d M Y H:i:s \G\M\T', $this->expire) : ''
-				.isset($this->path) ? '; path='.$this->path : ''
-				.isset($this->domain) ? '; domain='.$this->domain : ''
-				.!empty($this->secure) ? '; secure' : ''
-				.!empty($this->http_only) ? '; httponly' : '';
+		return
+			rawurlencode($this->name).'='.rawurlencode($this->value)
+			.(isset($this->domain) ? '; Domain='.rawurlencode($this->domain) : '')
+			.(isset($this->path) ? '; Path='.$this->path : '')
+			.(!empty($this->expire) ? '; Expires='.gmdate('D, d M Y H:i:s \G\M\T', $this->expire) : '')
+			.(!empty($this->secure) ? '; Secure' : '')
+			.(!empty($this->http_only) ? '; HttpOnly' : '');
 	}
 }
