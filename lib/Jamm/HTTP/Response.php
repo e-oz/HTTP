@@ -63,10 +63,9 @@ class Response implements IResponse
 		if (empty($header)) return false;
 		$header                 = $this->getNewOrExistingKeyInArray($header, $this->headers);
 		$this->headers[$header] = $value;
-		if (strtolower($header)==='location'
-				&& ($this->status_code < 300 || $this->status_code > 399)
-		)
-		{
+		if (strtolower($header) === 'location'
+			&& ($this->status_code < 300 || $this->status_code > 399)
+		) {
 			$this->setStatusCode(301);
 		}
 	}
@@ -113,22 +112,18 @@ class Response implements IResponse
 		header_remove();
 		$body    = $this->getBodyToSend();
 		$headers = $this->getHeadersToSend($body);
-		foreach ($headers as $header)
-		{
+		foreach ($headers as $header) {
 			header($header);
 		}
-		if (!empty($this->cookies))
-		{
-			foreach ($this->cookies as $Cookie)
-			{
+		if (!empty($this->cookies)) {
+			foreach ($this->cookies as $Cookie) {
 				setcookie($Cookie->getName(), $Cookie->getValue(),
 					$Cookie->getExpire(), $Cookie->getPath(),
 					$Cookie->getDomain(), $Cookie->getSecure(),
 					$Cookie->getHttpOnly());
 			}
 		}
-		if ($this->send_body)
-		{
+		if ($this->send_body) {
 			print $body;
 		}
 	}
@@ -143,39 +138,39 @@ class Response implements IResponse
 	private function getHeadersToSend(&$body)
 	{
 		$headers = array();
-		if (isset($body))
-		{
+		if (isset($body)) {
 			$this->setHeader('Content-Length', strlen($body));
 		}
-		$headers[] = 'HTTP/'.$this->getProtocolVersion()
-				.' '.$this->getStatusCode().' '.$this->getStatusReason();
-		foreach ($this->getHeaders() as $header_key => $header_value)
-		{
-			$headers[] = $header_key.': '.$header_value;
+		$headers[] = 'HTTP/'.$this->getProtocolVersion().' '.$this->getStatusCode().' '.$this->getStatusReason();
+		if (($h = $this->getHeaders())) {
+			foreach ($h as $header_key => $header_value) {
+				$headers[] = $header_key.': '.$header_value;
+			}
+		}
+		if (($cookies = $this->getCookies())) {
+			foreach ($cookies as $Cookie) {
+				$headers[] = 'Set-Cookie: '.$Cookie->getHeader();
+			}
 		}
 		return $headers;
 	}
 
 	private function getBodyToSend()
 	{
-		if (!empty($this->Serializer) && $this->body!=='')
-		{
+		if (!empty($this->Serializer) && $this->body !== '') {
 			$body = $this->Serializer->serialize($this->body);
-			if ($this->Serializer->getContentType())
-			{
+			if ($this->Serializer->getContentType()) {
 				$this->setHeader('Content-Type', $this->Serializer->getContentType());
 			}
 			return $body;
 		}
-		else
-		{
+		else {
 			$body = $this->body;
-			if (!is_scalar($body))
-			{
-        $Serializer=new SerializerJSON();        
-				$body = $Serializer->serialize($body);
-        $this->setHeader('Content-Type', $Serializer->getContentType());
-        $this->setHeader('X-Warning','Result of request should be serialized to send through. Specify in "ACCEPT" header type of acceptable method of serialization.');
+			if (!is_scalar($body)) {
+				$Serializer = new SerializerJSON();
+				$body       = $Serializer->serialize($body);
+				$this->setHeader('Content-Type', $Serializer->getContentType());
+				$this->setHeader('X-Warning', 'Result of request should be serialized to send through. Specify in "ACCEPT" header type of acceptable method of serialization.');
 				return $body;
 			}
 			return $body;
@@ -206,10 +201,8 @@ class Response implements IResponse
 		if (empty($array)) return $key;
 		$keys    = array_keys($array);
 		$low_key = strtolower($key);
-		foreach ($keys as $existing_key)
-		{
-			if ($low_key===strtolower($existing_key))
-			{
+		foreach ($keys as $existing_key) {
+			if ($low_key === strtolower($existing_key)) {
 				return $existing_key;
 			}
 		}
@@ -218,10 +211,8 @@ class Response implements IResponse
 
 	public function getStatusReason()
 	{
-		if (empty($this->status_reason))
-		{
-			if (empty($this->status_code))
-			{
+		if (empty($this->status_reason)) {
+			if (empty($this->status_code)) {
 				$this->status_code = 200;
 				return 'OK (default)';
 			}
@@ -294,8 +285,7 @@ class Response implements IResponse
 				'511' => 'Network Authentication Required',
 				'598' => 'Network read timeout error',
 				'599' => 'Network connect timeout error');
-			if (isset($reasons[$this->status_code]))
-			{
+			if (isset($reasons[$this->status_code])) {
 				$this->status_reason = $reasons[$this->status_code];
 			}
 		}
@@ -320,14 +310,11 @@ class Response implements IResponse
 
 	public function getProtocolVersion()
 	{
-		if (empty($this->protocol_version))
-		{
-			if (isset($_SERVER['SERVER_PROTOCOL']))
-			{
+		if (empty($this->protocol_version)) {
+			if (isset($_SERVER['SERVER_PROTOCOL'])) {
 				list(, $this->protocol_version) = explode('/', $_SERVER['SERVER_PROTOCOL']);
 			}
-			else
-			{
+			else {
 				$this->protocol_version = '1.0';
 			}
 		}
