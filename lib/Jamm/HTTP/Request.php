@@ -443,7 +443,7 @@ class Request implements IRequest
 					continue;
 				}
 				if (strpos($header, ':') !== false) {
-					$header                    = explode(':', $header);
+					$header                    = explode(':', $header, 2);
 					$headers[trim($header[0])] = trim($header[1]);
 				}
 				else {
